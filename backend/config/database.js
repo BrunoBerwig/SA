@@ -1,25 +1,36 @@
+
 const { Pool } = require('pg');
 
-// Esta parte lê as informações do seu arquivo .env
+
+if (typeof process.env.DB_PASSWORD !== 'string') {
+    console.error('ERRO CRÍTICO: A senha do banco (DB_PASSWORD) não é uma string! Verifique seu arquivo .env. O programa será encerrado.');
+    process.exit(1); // Encerra o processo para evitar o erro do 'pg'
+}
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
+    ssl: {
+        require: true,
+        rejectUnauthorized: false
+    }
 });
 
-// Este trecho testa a conexão quando o servidor inicia
 pool.connect((err, client, release) => {
     if (err) {
-        return console.error('Erro ao conectar ao banco de dados', err.stack);
+        console.error('ERRO (pool.connect):', err.stack);
+        return;
     }
     client.query('SELECT NOW()', (err, result) => {
         release();
         if (err) {
-            return console.error('Erro ao executar query de teste', err.stack);
+            console.error('Erro ao executar query de teste', err.stack);
+            return;
         }
-        console.log('Conectado ao PostgreSQL com sucesso! Hora do servidor:', result.rows[0].now);
+        console.log('Conectado ao PostgreSQL. Hora do servidor:', result.rows[0].now);
     });
 });
 

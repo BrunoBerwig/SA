@@ -35,3 +35,4 @@ CONSTRAINT fk_medico
 
 INSERT INTO medicos (nome, especialidade, email, telefone) VALUES ('Dr. Roberto Azevedo', 'Cardiologista', 'roberto.azevedo@clinica.com', '(48) 98888-0001'),
 ('Dra. Mariana Guedes', 'Dermatologista', 'mariana.guedes@clinica.com', '(48) 98888-0002');
+

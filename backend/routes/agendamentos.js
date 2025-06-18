@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../database');
+const pool = require('../config/database');
 const verifyToken = require('../middleware/authMiddleware');
 
-// GET all agendamentos with patient and medico names
 router.get('/', verifyToken, async (req, res) => {
     try {
         const query = `
@@ -25,7 +24,6 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// POST a new agendamento
 router.post('/', verifyToken, async (req, res) => {
     try {
         const { paciente_id, medico_id, data, horario } = req.body;
@@ -50,7 +48,6 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// DELETE an agendamento
 router.delete('/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;

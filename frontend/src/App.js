@@ -30,7 +30,7 @@ function App() {
 
           <Route path="/agendamentos" element={<AgendamentoController />} />
           <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
-          
+        
           {/* Adicione rotas de atendimento aqui quando prontas */}
           {/* <Route path="/atendimentos" element={<AtendimentoList />} /> */}
         </Route>
