@@ -1,8 +1,6 @@
-// arquivo: gerar-hash.js
 const bcrypt = require('bcrypt');
 
-// Coloque a senha que você quer criptografar aqui
-const senhaEmTextoPuro = 'senha'; // <-- TROQUE AQUI
+const senhaEmTextoPuro = 'senha'; 
 const saltRounds = 10;
 
 console.log(`Gerando hash para a senha: "${senhaEmTextoPuro}"`);
