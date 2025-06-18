@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const PacienteForm = () => {
     const navigate = useNavigate();
@@ -10,12 +11,23 @@ const PacienteForm = () => {
         email: '',
         telefone: '',
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (id) {
-            api.get(`/pacientes/${id}`).then(response => {
-                setFormData(response.data);
-            });
+            const fetchPaciente = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await api.get(`/pacientes/${id}`);
+                    setFormData(response.data);
+                } catch (error) {
+                    toast.error('Não foi possível carregar os dados do paciente.');
+                    console.error('Erro ao buscar paciente:', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchPaciente();
         }
     }, [id]);
 
@@ -25,16 +37,21 @@ const PacienteForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             if (id) {
                 await api.put(`/pacientes/${id}`, formData);
+                toast.success('Paciente atualizado com sucesso!');
             } else {
                 await api.post('/pacientes', formData);
+                toast.success('Paciente cadastrado com sucesso!');
             }
             navigate('/pacientes');
         } catch (error) {
             console.error('Erro ao salvar paciente:', error);
-            alert('Ocorreu um erro ao salvar o paciente.');
+            toast.error('Ocorreu um erro ao salvar o paciente. Tente novamente.');
+        } finally {
+            setIsLoading(false);
         }
     };
     
@@ -46,42 +63,22 @@ const PacienteForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Nome</label>
-                    <input
-                        type="text"
-                        name="nome"
-                        value={formData.nome}
-                        onChange={handleChange}
-                        className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
+                    <input type="text" name="nome" value={formData.nome} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
                 </div>
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
                 </div>
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Telefone</label>
-                    <input
-                        type="text"
-                        name="telefone"
-                        value={formData.telefone}
-                        onChange={handleChange}
-                        className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
+                    <input type="text" name="telefone" value={formData.telefone} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
                 </div>
                 <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    disabled={isLoading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-300 disabled:cursor-not-allowed"
                 >
-                    Salvar Paciente
+                    {isLoading ? 'Salvando...' : 'Salvar Paciente'}
                 </button>
             </form>
         </div>

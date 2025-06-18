@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; // NOVO: Importa o Toaster
 import Login from './components/Login';
 import Layout from './components/Layout';
 import DashboardHome from './components/DashboardHome';
@@ -12,30 +13,28 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
+      <BrowserRouter>
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
-        {/* Rotas Protegidas com Layout */}
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<DashboardHome />} />
-          
-          <Route path="/pacientes" element={<PacienteController />} />
-          <Route path="/pacientes/novo" element={<PacienteForm />} />
-          <Route path="/pacientes/editar/:id" element={<PacienteForm />} />
-          
-          <Route path="/medicos" element={<MedicoController />} />
-          <Route path="/medicos/novo" element={<MedicoForm />} />
-          <Route path="/medicos/editar/:id" element={<MedicoForm />} />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<DashboardHome />} />
+            
+            <Route path="/pacientes" element={<PacienteController />} />
+            <Route path="/pacientes/novo" element={<PacienteForm />} />
+            <Route path="/pacientes/editar/:id" element={<PacienteForm />} />
+            
+            <Route path="/medicos" element={<MedicoController />} />
+            <Route path="/medicos/novo" element={<MedicoForm />} />
+            <Route path="/medicos/editar/:id" element={<MedicoForm />} />
 
-          <Route path="/agendamentos" element={<AgendamentoController />} />
-          <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
-        
-          {/* Adicione rotas de atendimento aqui quando prontas */}
-          {/* <Route path="/atendimentos" element={<AtendimentoList />} /> */}
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            <Route path="/agendamentos" element={<AgendamentoController />} />
+            <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
+          
+          </Route>
+        </Routes>
+      </BrowserRouter>
   );
 }
 
