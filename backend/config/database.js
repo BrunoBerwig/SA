@@ -3,8 +3,8 @@ const { Pool } = require('pg');
 
 
 if (typeof process.env.DB_PASSWORD !== 'string') {
-    console.error('ERRO CRÍTICO: A senha do banco (DB_PASSWORD) não é uma string! Verifique seu arquivo .env. O programa será encerrado.');
-    process.exit(1); // Encerra o processo para evitar o erro do 'pg'
+    console.error('ERRO');
+    process.exit(1); 
 }
 
 const pool = new Pool({
