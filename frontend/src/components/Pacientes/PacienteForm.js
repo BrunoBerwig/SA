@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import Spinner from '../common/Spinner';
 
 const PacienteForm = () => {
     const navigate = useNavigate();
@@ -16,15 +17,12 @@ const PacienteForm = () => {
     useEffect(() => {
         if (id) {
             const fetchPaciente = async () => {
-                setIsLoading(true);
                 try {
                     const response = await api.get(`/pacientes/${id}`);
                     setFormData(response.data);
                 } catch (error) {
                     toast.error('Não foi possível carregar os dados do paciente.');
                     console.error('Erro ao buscar paciente:', error);
-                } finally {
-                    setIsLoading(false);
                 }
             };
             fetchPaciente();
@@ -63,22 +61,27 @@ const PacienteForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Nome</label>
-                    <input type="text" name="nome" value={formData.nome} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
+                    <input type="text" name="nome" value={formData.nome} onChange={handleChange} className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
                     <label className="block text-gray-700 font-medium mb-1">Telefone</label>
-                    <input type="text" name="telefone" value={formData.telefone} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" required />
+                    <input type="text" name="telefone" value={formData.telefone} onChange={handleChange} className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
+                
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-300 disabled:cursor-not-allowed"
+                    className="w-full h-11 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-300 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? 'Salvando...' : 'Salvar Paciente'}
+                    {isLoading ? (
+                        <Spinner size="sm" />
+                    ) : (
+                        'Salvar Paciente'
+                    )}
                 </button>
             </form>
         </div>

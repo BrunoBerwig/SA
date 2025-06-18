@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import api from '../services/api'; // Corrigido para o caminho relativo a partir de src/
 import { FaUserInjured, FaUserMd, FaCalendarCheck, FaPlus } from 'react-icons/fa';
-
+import Spinner from './common/Spinner'; // CORREÇÃO: O caminho correto a partir desta pasta
 
 // Componente para os cards de estatística
 const StatCard = ({ icon, title, value, color }) => {
@@ -18,36 +18,42 @@ const StatCard = ({ icon, title, value, color }) => {
 };
 
 const DashboardHome = () => {
+    // Estados para armazenar os dados
     const [stats, setStats] = useState({ pacientes: 0, medicos: 0, agendamentos: 0 });
     const [proximosAgendamentos, setProximosAgendamentos] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
+                // Usamos Promise.all para buscar todos os dados em paralelo
                 const [resPacientes, resMedicos, resAgendamentos] = await Promise.all([
                     api.get('/pacientes'),
                     api.get('/medicos'),
                     api.get('/agendamentos')
                 ]);
 
+                // Atualiza as estatísticas
                 setStats({
                     pacientes: resPacientes.data.length,
                     medicos: resMedicos.data.length,
                     agendamentos: resAgendamentos.data.length,
                 });
 
+                // Filtra os agendamentos para mostrar apenas os de hoje em diante
                 const hoje = new Date();
-                hoje.setHours(0, 0, 0, 0); 
+                hoje.setHours(0, 0, 0, 0); // Zera a hora para comparar apenas a data
 
                 const agendamentosFuturos = resAgendamentos.data
                     .filter(ag => new Date(ag.data_hora) >= hoje)
-                    .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora)); 
+                    .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
 
-                setProximosAgendamentos(agendamentosFuturos.slice(0, 5)); 
+                setProximosAgendamentos(agendamentosFuturos.slice(0, 5)); // Pega apenas os 5 próximos
 
             } catch (error) {
                 console.error("Erro ao carregar dados do dashboard:", error);
+                // Você pode adicionar um toast de erro aqui se quiser
             } finally {
                 setLoading(false);
             }
@@ -56,12 +62,18 @@ const DashboardHome = () => {
         fetchData();
     }, []);
 
+    // Se estiver carregando, mostra o spinner centralizado
     if (loading) {
-        return <div className="text-center p-10">Carregando informações do dashboard...</div>;
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Spinner size="lg" />
+            </div>
+        );
     }
 
     return (
         <div className="space-y-8">
+            {/* Saudação e Ações Rápidas */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800">
@@ -75,14 +87,17 @@ const DashboardHome = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Cards de Estatísticas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard icon={<FaUserInjured className="text-blue-500"/>} title="Total de Pacientes" value={stats.pacientes} color="border-blue-500" />
                 <StatCard icon={<FaUserMd className="text-green-500"/>} title="Total de Médicos" value={stats.medicos} color="border-green-500" />
                 <StatCard icon={<FaCalendarCheck className="text-purple-500"/>} title="Agendamentos Futuros" value={proximosAgendamentos.length} color="border-purple-500" />
             </div>
 
+            {/* Próximos Agendamentos */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Próximos Agendamentos</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Próximos 5 Agendamentos</h2>
                 <div className="overflow-x-auto">
                     {proximosAgendamentos.length > 0 ? (
                         <table className="min-w-full">
