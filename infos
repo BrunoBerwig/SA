@@ -1,0 +1,37 @@
+CREATE TABLE Usuarios (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT "admin",
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE medicos(
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    especialidade VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE agendamentos(
+    id SERIAL PRIMARY KEY,
+    paciente_id INTEGER NOT NULL,
+    medico_id INTEGER NOT NULL,
+    data_hora TIMESTAMP NOT NULL,
+    status VARCHAR(50) DEFAULT 'Agendado',
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+
+CONSTRAINT fk_paciente
+    FOREING KEY(paciente_id)
+    REFERENCES pacientes(id)
+    ON DELETE CASCADE,
+
+CONSTRAINT fk_medico
+    FOREIGN KEY(medico_id)
+    REFERENCES medicos(id)
+);
+
+INSERT INTO medicos (nome, especialidade, email, telefone) VALUES ('Dr. Roberto Azevedo', 'Cardiologista', 'roberto.azevedo@clinica.com', '(48) 98888-0001'),
+('Dra. Mariana Guedes', 'Dermatologista', 'mariana.guedes@clinica.com', '(48) 98888-0002');
