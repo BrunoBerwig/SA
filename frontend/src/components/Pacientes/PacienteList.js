@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaPencilAlt, FaTrash } from 'react-icons/fa';
 
 const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
     const navigate = useNavigate();
@@ -40,18 +40,22 @@ const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
                                 <td className="px-6 py-4 text-gray-700">{paciente.nome}</td>
                                 <td className="px-6 py-4 text-gray-700">{paciente.telefone}</td>
                                 <td className="px-6 py-4 text-gray-700">{paciente.email}</td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 text-center">
                                     <button
-                                        className="text-blue-600 hover:underline mr-4"
+                                        title="Editar"
+                                        aria-label={`Editar paciente ${paciente.nome}`}
+                                        className="text-blue-600 hover:text-blue-800 mr-4 transition transform hover:scale-110"
                                         onClick={() => onEdit(paciente)}
                                     >
-                                        Editar
+                                        <FaPencilAlt size={16} />
                                     </button>
                                     <button
-                                        className="text-red-600 hover:underline"
+                                        title="Excluir"
+                                        aria-label={`Excluir paciente ${paciente.nome}`}
+                                        className="text-red-600 hover:text-red-800 transition transform hover:scale-110"
                                         onClick={() => onDelete(paciente.id)}
                                     >
-                                        Excluir
+                                        <FaTrash size={16} />
                                     </button>
                                 </td>
                             </tr>
