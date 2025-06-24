@@ -6,7 +6,7 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">Agendamentos</h2>
                 <button
@@ -19,13 +19,13 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
             </div>
             
             <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-slate-700">
                     <tr>
-                        <th className="text-left px-6 py-3 text-gray-700 font-medium">Paciente</th>
-                        <th className="text-left px-6 py-3 text-gray-700 font-medium">Médico</th>
-                        <th className="text-left px-6 py-3 text-gray-700 font-medium">Data/Hora</th>
-                        <th className="text-left px-6 py-3 text-gray-700 font-medium">Status</th>
-                        <th className="text-left px-6 py-3 text-gray-700 font-medium">Ações</th>
+                        <th className="text-left px-6 py-3 text-gray-700 dark:text-gray-300 font-medium">Paciente</th>
+                        <th className="text-left px-6 py-3 text-gray-700 dark:text-gray-300 font-medium">Médico</th>
+                        <th className="text-left px-6 py-3 text-gray-700 dark:text-gray-300 font-medium">Data/Hora</th>
+                        <th className="text-left px-6 py-3 text-gray-700 dark:text-gray-300 font-medium">Status</th>
+                        <th className="text-center px-6 py-3 text-gray-700 dark:text-gray-300 font-medium">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,10 +37,10 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
                         </tr>
                     ) : (
                         agendamentos.map((agendamento) => (
-                            <tr key={agendamento.id} className="border-t border-gray-200 hover:bg-gray-100 transition-colors">
-                                <td className="px-6 py-4 text-gray-700">{agendamento.paciente_nome}</td>
-                                <td className="px-6 py-4 text-gray-700">{agendamento.medico_nome}</td>
-                                <td className="px-6 py-4 text-gray-700">
+                            <tr key={agendamento.id} className="border-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors">
+                                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{agendamento.paciente_nome}</td>
+                                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{agendamento.medico_nome}</td>
+                                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
                                     {new Date(agendamento.data_hora).toLocaleString('pt-BR')}
                                 </td>
                                 <td className="px-6 py-4">

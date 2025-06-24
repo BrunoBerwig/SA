@@ -96,17 +96,18 @@ const AgendamentoForm = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">📅 Novo Agendamento</h2>
+    <div className="max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📅 Novo Agendamento</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Paciente */}
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Paciente</label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Paciente</label>
           <select
             name="paciente_id"
             value={formData.paciente_id}
             onChange={handleChange}
-            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
+            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
             required
           >
             <option value="">Selecione um paciente</option>
@@ -118,12 +119,13 @@ const AgendamentoForm = () => {
 
         {/* Médico */}
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Médico</label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Médico</label>
           <select
             name="medico_id"
             value={formData.medico_id}
             onChange={handleChange}
-            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
+            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
             required
           >
             <option value="">Selecione um médico</option>
@@ -137,7 +139,7 @@ const AgendamentoForm = () => {
         <div className="grid grid-cols-2 gap-4">
           {/* Data com react-datepicker */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Data</label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Data</label>
             <DatePicker
               selected={formData.data ? new Date(formData.data) : null}
               onChange={handleDateChange}
@@ -146,22 +148,24 @@ const AgendamentoForm = () => {
               minDate={new Date()}
               filterDate={(date) => date.getDay() !== 0} // Bloqueia domingos
               placeholderText="Selecione uma data"
-              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI (ao DatePicker também)
+              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
               required
             />
           </div>
 
           {/* Hora com validação */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Hora</label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Hora</label>
             <input
               type="time"
               name="horario"
-              value={formData.horario} // Corrigido de formData.hora para formData.horario
+              value={formData.horario}
               onChange={handleChange}
               min="07:00"
               max="19:00"
-              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
+              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
               required
             />
             {!horarioValido && (
