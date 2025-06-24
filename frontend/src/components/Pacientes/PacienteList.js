@@ -5,6 +5,25 @@ import { FaPlus, FaPencilAlt, FaTrash } from 'react-icons/fa';
 const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
     const navigate = useNavigate();
 
+    const handleRowClick = (pacienteId) => {
+        navigate(`/pacientes/${pacienteId}`);
+    };
+
+    const handleEditClick = (event, paciente) => {
+        event.stopPropagation();
+        if (onEdit) {
+            onEdit(paciente);
+        } else {
+            console.warn("Prop 'onEdit' não foi fornecida ao PacienteList. Implementando navegação padrão.");
+            navigate(`/pacientes/edit/${paciente.id}`);
+        }
+    };
+
+    const handleDeleteClick = (event, pacienteId) => {
+        event.stopPropagation();
+        onDelete(pacienteId);
+    };
+
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-6">
@@ -17,7 +36,7 @@ const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
                     Novo Paciente
                 </button>
             </div>
-            
+
             <div className="overflow-x-auto">
                 <table className="min-w-full border border-gray-300 dark:border-slate-700 rounded-lg overflow-hidden">
                     <thead className="bg-gray-50 dark:bg-slate-700">
@@ -37,7 +56,11 @@ const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
                             </tr>
                         ) : (
                             pacientes.map((paciente) => (
-                                <tr key={paciente.id} className="hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors">
+                                <tr
+                                    key={paciente.id}
+                                    className="hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                                    onClick={() => handleRowClick(paciente.id)}
+                                >
                                     <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{paciente.nome}</td>
                                     <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{paciente.telefone}</td>
                                     <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{paciente.email}</td>
@@ -46,7 +69,7 @@ const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
                                             title="Editar"
                                             aria-label={`Editar paciente ${paciente.nome}`}
                                             className="text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 mr-4 transition transform hover:scale-110"
-                                            onClick={() => onEdit(paciente)}
+                                            onClick={(e) => handleEditClick(e, paciente)}
                                         >
                                             <FaPencilAlt size={16} />
                                         </button>
@@ -54,7 +77,7 @@ const PacienteList = ({ pacientes = [], onEdit, onDelete }) => {
                                             title="Excluir"
                                             aria-label={`Excluir paciente ${paciente.nome}`}
                                             className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition transform hover:scale-110"
-                                            onClick={() => onDelete(paciente.id)}
+                                            onClick={(e) => handleDeleteClick(e, paciente.id)}
                                         >
                                             <FaTrash size={16} />
                                         </button>

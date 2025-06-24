@@ -74,7 +74,7 @@ const DashboardHome = () => {
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Aqui está um resumo da atividade da sua clínica.</p>
                 </div>
                 <div className="flex gap-2">
-                     <Link to="/agendamentos/novo" className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                     <Link to="/agendamentos/novo" className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
                         <FaPlus className="mr-2" /> Novo Agendamento
                     </Link>
                 </div>

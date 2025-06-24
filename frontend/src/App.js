@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import DashboardHome from './components/DashboardHome';
 import PacienteController from './components/Pacientes/PacienteController';
 import PacienteForm from './components/Pacientes/PacienteForm';
+import PacienteDetails from './components/Pacientes/PacienteDetails'
 import MedicoController from './components/Medicos/MedicoController';
 import MedicoForm from './components/Medicos/MedicoForm';
 import AgendamentoController from './components/Agendamentos/AgendamentoController';
@@ -24,6 +25,7 @@ function App() {
             <Route path="/pacientes" element={<PacienteController />} />
             <Route path="/pacientes/novo" element={<PacienteForm />} />
             <Route path="/pacientes/editar/:id" element={<PacienteForm />} />
+            <Route path="/pacientes/:id" element={<PacienteDetails />} />
             
             <Route path="/medicos" element={<MedicoController />} />
             <Route path="/medicos/novo" element={<MedicoForm />} />
