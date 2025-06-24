@@ -6,9 +6,24 @@ const verifyToken = require('../middleware/authMiddleware');
 // GET all pacientes
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM pacientes ORDER BY nome ASC');
+        const result = await pool.query(`
+            SELECT
+                id,
+                nome,
+                email,
+                telefone,
+                convenio,
+                data_nascimento,
+                alergias,
+                condicoes_medicas,
+                contato_emergencia_nome,
+                created_at
+            FROM pacientes
+            ORDER BY nome ASC
+        `);
         res.json(result.rows);
     } catch (err) {
+        console.error('Erro ao buscar todos os pacientes:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -17,38 +32,69 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query('SELECT * FROM pacientes WHERE id = $1', [id]);
+        const result = await pool.query(`
+            SELECT
+                id,
+                nome,
+                email,
+                telefone,
+                convenio,
+                data_nascimento,
+                alergias,
+                condicoes_medicas,
+                contato_emergencia_nome,
+                created_at
+            FROM pacientes
+            WHERE id = $1
+        `, [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Paciente não encontrado.' });
+        }
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao buscar paciente por ID:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
 // POST a new paciente
 router.post('/', verifyToken, async (req, res) => {
+    const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome } = req.body;
+
+    // Log para depuração
+    console.log('Dados recebidos para POST de paciente:', req.body);
+
     try {
-        const { nome, email, telefone } = req.body;
         const newPaciente = await pool.query(
-            'INSERT INTO pacientes (nome, email, telefone) VALUES ($1, $2, $3) RETURNING *',
-            [nome, email, telefone]
+            'INSERT INTO pacientes (nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome]
         );
         res.status(201).json(newPaciente.rows[0]);
     } catch (err) {
+        console.error('Erro ao criar novo paciente:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
 // PUT (update) a paciente
 router.put('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome } = req.body;
+
+    // Log para depuração
+    console.log(`Dados recebidos para PUT do paciente ${id}:`, req.body);
+
     try {
-        const { id } = req.params;
-        const { nome, email, telefone } = req.body;
         const updatedPaciente = await pool.query(
-            'UPDATE pacientes SET nome = $1, email = $2, telefone = $3 WHERE id = $4 RETURNING *',
-            [nome, email, telefone, id]
+            'UPDATE pacientes SET nome = $1, email = $2, telefone = $3, convenio = $4, data_nascimento = $5, alergias = $6, condicoes_medicas = $7, contato_emergencia_nome = $8 WHERE id = $9 RETURNING *',
+            [nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, id]
         );
+        if (updatedPaciente.rows.length === 0) {
+            return res.status(404).json({ message: 'Paciente não encontrado para atualização.' });
+        }
         res.json(updatedPaciente.rows[0]);
     } catch (err) {
+        console.error(`Erro ao atualizar paciente ${id}:`, err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -57,9 +103,13 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        await pool.query('DELETE FROM pacientes WHERE id = $1', [id]);
+        const deleteResult = await pool.query('DELETE FROM pacientes WHERE id = $1 RETURNING id', [id]);
+        if (deleteResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Paciente não encontrado para exclusão.' });
+        }
         res.status(204).send(); // No content
     } catch (err) {
+        console.error(`Erro ao deletar paciente ${req.params.id}:`, err.message);
         res.status(500).json({ error: err.message });
     }
 });
