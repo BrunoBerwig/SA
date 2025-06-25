@@ -5,9 +5,10 @@ import Layout from './components/Layout';
 import DashboardHome from './components/DashboardHome';
 import PacienteController from './components/Pacientes/PacienteController';
 import PacienteForm from './components/Pacientes/PacienteForm';
-import PacienteDetails from './components/Pacientes/PacienteDetails'
+import PacienteDetails from './components/Pacientes/PacienteDetails';
 import MedicoController from './components/Medicos/MedicoController';
 import MedicoForm from './components/Medicos/MedicoForm';
+import MedicoDetails from './components/Medicos/MedicoDetails';
 import AgendamentoController from './components/Agendamentos/AgendamentoController';
 import AgendamentoForm from './components/Agendamentos/AgendamentoForm';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -30,9 +31,11 @@ function App() {
             <Route path="/medicos" element={<MedicoController />} />
             <Route path="/medicos/novo" element={<MedicoForm />} />
             <Route path="/medicos/editar/:id" element={<MedicoForm />} />
+            <Route path="/medicos/:id" element={<MedicoDetails />} />
 
             <Route path="/agendamentos" element={<AgendamentoController />} />
             <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
+            <Route path="/agendamentos/editar/:id" element={<AgendamentoForm />} />
           
           </Route>
         </Routes>
