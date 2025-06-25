@@ -6,12 +6,9 @@ const verifyToken = require('../middleware/authMiddleware');
 router.get('/', verifyToken, async (req, res) => {
     try {
         const query = `
-            SELECT 
-                a.id, 
-                a.data_hora, 
-                a.status, 
-                p.nome as paciente_nome, 
-                m.nome as medico_nome
+            SELECT a.id, a.data_hora, a.status, a.tipo_consulta, 
+                   p.nome as paciente_nome, p.id as paciente_id,
+                   m.nome as medico_nome, m.id as medico_id
             FROM agendamentos a
             JOIN pacientes p ON a.paciente_id = p.id
             JOIN medicos m ON a.medico_id = m.id
@@ -24,9 +21,22 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
+router.get('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM agendamentos WHERE id = $1', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Agendamento não encontrado.' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { paciente_id, medico_id, data, horario } = req.body;
+        const { paciente_id, medico_id, data, horario, tipo_consulta, observacoes_recepcao, status_confirmacao } = req.body;
         const data_hora = `${data}T${horario}:00`;
         
         const conflictCheck = await pool.query(
@@ -39,8 +49,10 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         const newAgendamento = await pool.query(
-            'INSERT INTO agendamentos (paciente_id, medico_id, data_hora, status) VALUES ($1, $2, $3, $4) RETURNING *',
-            [paciente_id, medico_id, data_hora, 'Agendado']
+            `INSERT INTO agendamentos (paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) 
+             RETURNING *`,
+            [paciente_id, medico_id, data_hora, 'Agendado', tipo_consulta, observacoes_recepcao, status_confirmacao]
         );
         res.status(201).json(newAgendamento.rows[0]);
     } catch (err) {
@@ -48,10 +60,36 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-router.delete('/:id', verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao } = req.body;
+
     try {
-        const { id } = req.params;
-        await pool.query('DELETE FROM agendamentos WHERE id = $1', [id]);
+        const updatedAgendamento = await pool.query(
+            `UPDATE agendamentos 
+             SET paciente_id = $1, medico_id = $2, data_hora = $3, status = $4, tipo_consulta = $5, observacoes_recepcao = $6, status_confirmacao = $7, updated_at = NOW() 
+             WHERE id = $8 
+             RETURNING *`,
+            [paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao, id]
+        );
+
+        if (updatedAgendamento.rows.length === 0) {
+            return res.status(404).json({ message: 'Agendamento não encontrado.' });
+        }
+        res.json(updatedAgendamento.rows[0]);
+    } catch (err) {
+        console.error("Erro ao atualizar agendamento:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.delete('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deleteResult = await pool.query('DELETE FROM agendamentos WHERE id = $1', [id]);
+        if (deleteResult.rowCount === 0) {
+            return res.status(404).json({ message: "Agendamento não encontrado para exclusão." });
+        }
         res.status(204).send();
     } catch (err) {
         res.status(500).json({ error: err.message });

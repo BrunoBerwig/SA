@@ -4,191 +4,167 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { registerLocale } from 'react-datepicker';
 import ptBR from 'date-fns/locale/pt-BR';
-// Importa useNavigate do react-router-dom
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import Spinner from '../common/Spinner';
 
 registerLocale('pt-BR', ptBR);
 
-// Remove a prop 'onAgendamentoAdicionado' da desestruturação
 const AgendamentoForm = () => {
-  // Inicializa o hook de navegação
-  const navigate = useNavigate();
+    const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditing = !!id;
 
-  const [formData, setFormData] = useState({
-    paciente_id: '',
-    medico_id: '',
-    data: '',
-    horario: '',
-  });
+    const [formData, setFormData] = useState({
+        paciente_id: '',
+        medico_id: '',
+        data: '',
+        horario: '',
+        tipo_consulta: 'Consulta Padrão',
+        status_confirmacao: 'Pendente',
+        observacoes_recepcao: '',
+        status: 'Agendado'
+    });
 
-  const [pacientes, setPacientes] = useState([]);
-  const [medicos, setMedicos] = useState([]);
-  const [horarioValido, setHorarioValido] = useState(true);
-  const [mensagemErroHorario, setMensagemErroHorario] = useState('');
+    const [pacientes, setPacientes] = useState([]);
+    const [medicos, setMedicos] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetchingData, setIsFetchingData] = useState(true);
 
-  useEffect(() => {
-    async function fetchDados() {
-      try {
-        const resPacientes = await api.get('/pacientes');
-        const resMedicos = await api.get('/medicos');
-        setPacientes(resPacientes.data);
-        setMedicos(resMedicos.data);
-      } catch (error) {
-        console.error('Erro ao buscar dados de pacientes ou médicos:', error);
-        // Opcional: exibir uma mensagem de erro para o usuário
-      }
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const [resPacientes, resMedicos] = await Promise.all([
+                    api.get('/pacientes'),
+                    api.get('/medicos?ativo=true')
+                ]);
+                setPacientes(resPacientes.data);
+                setMedicos(resMedicos.data);
+
+                if (isEditing) {
+                    const resAgendamento = await api.get(`/agendamentos/${id}`);
+                    const dadosAgendamento = resAgendamento.data;
+                    
+                    const [dataPart, timePart] = dadosAgendamento.data_hora.split('T');
+                    
+                    setFormData({
+                        ...dadosAgendamento,
+                        data: dataPart,
+                        horario: timePart.substring(0, 5)
+                    });
+                }
+            } catch (error) {
+                toast.error('Erro ao buscar dados iniciais.');
+            } finally {
+                setIsFetchingData(false);
+            }
+        };
+        fetchInitialData();
+    }, [id, isEditing]);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleDateChange = (date) => {
+        setFormData({ ...formData, data: date ? date.toISOString().split('T')[0] : '' });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        const submissionData = {
+            ...formData,
+            data_hora: `${formData.data}T${formData.horario}:00`
+        };
+
+        const promise = isEditing 
+            ? api.put(`/agendamentos/${id}`, submissionData) 
+            : api.post('/agendamentos', submissionData);
+
+        toast.promise(promise, {
+            loading: 'Salvando agendamento...',
+            success: () => {
+                navigate('/agendamentos');
+                return `Agendamento ${isEditing ? 'atualizado' : 'criado'} com sucesso!`;
+            },
+            error: (err) => {
+                return err.response?.data?.message || 'Ocorreu um erro ao salvar.';
+            }
+        });
+        
+        promise.catch(() => {}).finally(() => setIsLoading(false));
+    };
+
+    if (isFetchingData) {
+        return <div className="flex justify-center p-10"><Spinner size="lg" /></div>;
     }
-    fetchDados();
-  }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+    return (
+        <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{isEditing ? '📝 Editar Agendamento' : '📅 Novo Agendamento'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <select name="paciente_id" value={formData.paciente_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                         <option value="">Selecione um paciente</option>
+                         {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                    </select>
+                    <select name="medico_id" value={formData.medico_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                        <option value="">Selecione um médico</option>
+                        {medicos.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                    </select>
+                </div>
 
-    if (name === 'horario') {
-      const [hora, minuto] = value.split(':').map(Number);
-      if (hora < 7 || hora > 19 || (hora === 19 && minuto > 0)) {
-        setHorarioValido(false);
-        setMensagemErroHorario('Horário deve estar entre 07:00 e 19:00');
-      } else {
-        setHorarioValido(true);
-        setMensagemErroHorario('');
-      }
-    }
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DatePicker selected={formData.data ? new Date(formData.data + 'T00:00:00') : null} onChange={handleDateChange} dateFormat="dd/MM/yyyy" locale="pt-BR" minDate={new Date()} placeholderText="Selecione uma data" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"/>
+                    <input type="time" name="horario" value={formData.horario} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"/>
+                </div>
 
-    setFormData({ ...formData, [name]: value });
-  };
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de Consulta</label>
+                        <select name="tipo_consulta" value={formData.tipo_consulta} onChange={handleChange} className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            <option>Consulta Padrão</option>
+                            <option>Primeira Consulta</option>
+                            <option>Retorno</option>
+                            <option>Exame</option>
+                            <option>Telemedicina</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status de Confirmação</label>
+                        <select name="status_confirmacao" value={formData.status_confirmacao} onChange={handleChange} className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            <option>Pendente</option>
+                            <option>Confirmado pelo Paciente</option>
+                            <option>Lembrete Enviado</option>
+                        </select>
+                    </div>
+                </div>
 
-  const handleDateChange = (date) => {
-    // Garante que a data seja um objeto Date antes de chamar toISOString
-    if (date instanceof Date && !isNaN(date)) {
-      const dataFormatada = date.toISOString().split('T')[0];
-      setFormData({ ...formData, data: dataFormatada });
-    } else {
-      setFormData({ ...formData, data: '' }); // Limpa a data se for inválida
-    }
-  };
+                 {isEditing && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status do Agendamento</label>
+                        <select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            <option>Agendado</option>
+                            <option>Concluído</option>
+                            <option>Cancelado</option>
+                            <option>Não Compareceu</option>
+                        </select>
+                    </div>
+                )}
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/agendamentos', formData);
-      // Remove a chamada para onAgendamentoAdicionado()
-      // Navega de volta para a lista de agendamentos após o sucesso
-      navigate('/agendamentos');
-      
-      // Limpa o formulário apenas se não estiver navegando para outra página imediatamente
-      // Se você quiser que o formulário limpe antes de navegar, mantenha as linhas abaixo
-      setFormData({ paciente_id: '', medico_id: '', data: '', horario: '' });
-      setHorarioValido(true);
-      setMensagemErroHorario('');
-
-    } catch (error) {
-      console.error('Erro ao agendar consulta:', error);
-      // Opcional: exibir uma mensagem de erro para o usuário (ex: horário já ocupado)
-      if (error.response && error.response.status === 409) {
-        setMensagemErroHorario('Horário já agendado para o médico selecionado.');
-        setHorarioValido(false);
-      } else {
-        setMensagemErroHorario('Ocorreu um erro ao agendar. Tente novamente.');
-        setHorarioValido(false);
-      }
-    }
-  };
-
-  return (
-    <div className="max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📅 Novo Agendamento</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Paciente */}
-        <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Paciente</label>
-          <select
-            name="paciente_id"
-            value={formData.paciente_id}
-            onChange={handleChange}
-            // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
-            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-            required
-          >
-            <option value="">Selecione um paciente</option>
-            {pacientes.map(p => (
-              <option key={p.id} value={p.id}>{p.nome}</option>
-            ))}
-          </select>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações (Recepção)</label>
+                    <textarea name="observacoes_recepcao" value={formData.observacoes_recepcao} onChange={handleChange} rows="3" placeholder="Ex: Paciente tem preferência pelo horário da manhã, trazer exames anteriores..." className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+                </div>
+                
+                <button type="submit" disabled={isLoading} className="w-full h-11 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-800">
+                    {isLoading ? <Spinner size="sm" /> : (isEditing ? 'Atualizar Agendamento' : 'Criar Agendamento')}
+                </button>
+            </form>
         </div>
-
-        {/* Médico */}
-        <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Médico</label>
-          <select
-            name="medico_id"
-            value={formData.medico_id}
-            onChange={handleChange}
-            // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
-            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-            required
-          >
-            <option value="">Selecione um médico</option>
-            {medicos.map(m => (
-              <option key={m.id} value={m.id}>{m.nome} - {m.especialidade}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Data e Hora */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Data com react-datepicker */}
-          <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Data</label>
-            <DatePicker
-              selected={formData.data ? new Date(formData.data) : null}
-              onChange={handleDateChange}
-              dateFormat="yyyy-MM-dd"
-              locale="pt-BR"
-              minDate={new Date()}
-              filterDate={(date) => date.getDay() !== 0} // Bloqueia domingos
-              placeholderText="Selecione uma data"
-              // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI (ao DatePicker também)
-              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-              required
-            />
-          </div>
-
-          {/* Hora com validação */}
-          <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1">Hora</label>
-            <input
-              type="time"
-              name="horario"
-              value={formData.horario}
-              onChange={handleChange}
-              min="07:00"
-              max="19:00"
-              // ADICIONADAS AS CLASSES DO PacienteForm.js AQUI
-              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-              required
-            />
-            {!horarioValido && (
-              <p className="text-red-600 text-sm mt-1">{mensagemErroHorario}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Botão */}
-        <button
-          type="submit"
-          disabled={!horarioValido}
-          className={`w-full font-semibold py-2 px-4 rounded-lg transition ${
-            horarioValido
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-              : 'bg-gray-400 cursor-not-allowed text-white'
-          }`}
-        >
-          Agendar Consulta
-        </button>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default AgendamentoForm;
