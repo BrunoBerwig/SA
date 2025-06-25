@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
-import { FaUserMd, FaEnvelope, FaPhone, FaIdCard, FaCheckCircle, FaTimesCircle, FaCalendarDay, FaClock, FaTag, FaUserCircle } from 'react-icons/fa';
+import { FaIdCard, FaCheckCircle, FaTimesCircle, FaCalendarDay, FaClock, FaUserCircle } from 'react-icons/fa';
 import Calendar from 'react-calendar';
 
 const MedicoDetails = () => {

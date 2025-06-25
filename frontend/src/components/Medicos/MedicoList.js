@@ -29,7 +29,7 @@ const MedicoList = ({ medicos = [], onEdit, onDelete }) => {
                 <tr key={medico.id} className="hover:bg-gray-100 dark:hover:bg-slate-700/50">
                   <td className="px-6 py-4">
                     <Link to={`/medicos/${medico.id}`} className="flex items-center group">
-                      <img src={medico.foto_url || `https://ui-avatars.com/api/?name=${medico.nome}&background=random`} alt={medico.nome} className="w-10 h-10 rounded-full mr-4" />
+                      <img src={medico.foto_url || `https://ui-avatars.com/api/?name=${medico.nome.replace(/\s/g, '+')}&background=random`} alt={medico.nome} className="w-10 h-10 rounded-full mr-4" />
                       <span className="font-medium text-gray-900 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">{medico.nome}</span>
                     </Link>
                   </td>

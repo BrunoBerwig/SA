@@ -8,26 +8,38 @@ const MedicoForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [formData, setFormData] = useState({
-        nome: '', especialidade: '', email: '', telefone: '',
-        crm_numero: '', crm_uf: '', foto_url: '', biografia: '', ativo: true,
+        nome: '',
+        especialidade_id: '',
+        email: '',
+        telefone: '',
+        crm_numero: '',
+        crm_uf: '',
+        foto_url: '',
+        biografia: '',
+        ativo: true,
     });
+    const [especialidades, setEspecialidades] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingData, setIsFetchingData] = useState(true);
 
     useEffect(() => {
-        if (id) {
+        const fetchInitialData = async () => {
             setIsFetchingData(true);
-            api.get(`/medicos/${id}`).then(res => {
-                setFormData(res.data);
-            }).catch(error => {
-                toast.error("Não foi possível carregar os dados do médico.");
-                console.error(error);
-            }).finally(() => {
+            try {
+                const resEspecialidades = await api.get('/especialidades');
+                setEspecialidades(resEspecialidades.data);
+
+                if (id) {
+                    const resMedico = await api.get(`/medicos/${id}`);
+                    setFormData(resMedico.data);
+                }
+            } catch (error) {
+                toast.error("Erro ao carregar dados do formulário.");
+            } finally {
                 setIsFetchingData(false);
-            });
-        } else {
-            setIsFetchingData(false); // Se não há ID, não estamos buscando nada
-        }
+            }
+        };
+        fetchInitialData();
     }, [id]);
 
     const handleChange = (e) => {
@@ -38,23 +50,17 @@ const MedicoForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        
-        const promise = id 
-            ? api.put(`/medicos/${id}`, formData) 
-            : api.post('/medicos', formData);
+        const promise = id ? api.put(`/medicos/${id}`, formData) : api.post('/medicos', formData);
         
         toast.promise(promise, {
-            loading: 'Salvando médico...',
+            loading: 'Salvando...',
             success: () => {
                 navigate('/medicos');
                 return `Médico ${id ? 'atualizado' : 'cadastrado'} com sucesso!`;
             },
-            error: (err) => {
-                return err.response?.data?.message || 'Ocorreu um erro ao salvar.';
-            }
+            error: (err) => err.response?.data?.message || 'Ocorreu um erro.',
         });
 
-        // O toast lida com o estado visual, mas precisamos resetar nosso 'isLoading'
         promise.catch(() => {}).finally(() => setIsLoading(false));
     };
     
@@ -68,9 +74,22 @@ const MedicoForm = () => {
         <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{pageTitle}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input name="nome" value={formData.nome || ''} onChange={handleChange} placeholder="Nome Completo" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                    <input name="especialidade" value={formData.especialidade || ''} onChange={handleChange} placeholder="Especialidade" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                    
+                    <select
+                        name="especialidade_id"
+                        value={formData.especialidade_id || ''}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    >
+                        <option value="" disabled>Selecione uma especialidade</option>
+                        {especialidades.map(esp => (
+                            <option key={esp.id} value={esp.id}>{esp.nome}</option>
+                        ))}
+                    </select>
+
                     <input name="email" type="email" value={formData.email || ''} onChange={handleChange} placeholder="Email" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
                     <input name="telefone" value={formData.telefone || ''} onChange={handleChange} placeholder="Telefone" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
                     <input name="crm_numero" value={formData.crm_numero || ''} onChange={handleChange} placeholder="CRM" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
@@ -84,8 +103,8 @@ const MedicoForm = () => {
                     <label htmlFor="ativo" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">Médico Ativo</label>
                 </div>
                 
-                <button type="submit" disabled={isLoading} className="w-full h-11 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-800 disabled:cursor-not-allowed">
-                    {isLoading ? <Spinner size="sm" /> : (id ? 'Atualizar Médico' : 'Cadastrar Médico')}
+                <button type="submit" disabled={isLoading} className="w-full h-11 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-800">
+                    {isLoading ? <Spinner size="sm" /> : 'Salvar Médico'}
                 </button>
             </form>
         </div>
