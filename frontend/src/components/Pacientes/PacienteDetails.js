@@ -1,5 +1,3 @@
-// src/components/PacienteDetails.js
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -39,7 +37,6 @@ const PacienteDetails = () => {
         if (id) {
             fetchPaciente();
         } else {
-            // Caso não haja ID na URL, o que pode indicar um problema de rota
             setError("ID do paciente não fornecido na URL. Por favor, volte e selecione um paciente.");
             setIsLoading(false);
         }
@@ -59,13 +56,11 @@ const PacienteDetails = () => {
         return `${idade} anos`;
     };
 
-    // Função para formatar a data de nascimento para exibição
     const formatarData = (dataString) => {
         if (!dataString) return 'Não informada';
         const date = new Date(dataString);
         return new Date(date.toISOString().split('T')[0] + 'T00:00:00').toLocaleDateString('pt-BR');
     };
-
 
     if (isLoading) {
         return (
@@ -106,6 +101,12 @@ const PacienteDetails = () => {
         );
     }
 
+    const isFieldEmpty = (value) => {
+        return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+    };
+
+    const areEmergencyContactsEmpty = isFieldEmpty(paciente.contato_emergencia_nome) && isFieldEmpty(paciente.contato_emergencia_numero);
+
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-slate-700">
             <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-6 border-b pb-4 border-gray-200 dark:border-slate-700">
@@ -143,16 +144,32 @@ const PacienteDetails = () => {
                     <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Condições Médicas</p>
                     <p className="text-lg font-medium whitespace-pre-wrap">{paciente.condicoes_medicas || 'Nenhuma condição médica informada.'}</p>
                 </div>
-                <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Nome Contato de Emergência</p>
-                    <p className="text-lg font-medium">{paciente.contato_emergencia_nome || 'Não informado'}</p>
+                <div className="md:col-span-2 mb-4 border-t pt-4 border-gray-200 dark:border-slate-700">
+                    <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">Contato de Emergência:</p>
+                    {areEmergencyContactsEmpty ? (
+                        <p className="text-lg font-medium ml-4">Sem contato de emergência cadastrado</p>
+                    ) : (
+                        <div className="ml-4">
+                            <div className="mb-2">
+                                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Nome:</p>
+                                <p className="text-lg font-medium">
+                                    {paciente.contato_emergencia_nome || 'Não informado'}
+                                </p>
+                            </div>
+                            <div className="mb-2">
+                                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Número:</p>
+                                <p className="text-lg font-medium">
+                                    {paciente.contato_emergencia_numero || 'Não informado'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                {/* Adicionar mais campos aqui conforme for adicionado no DB e no formulário */}
             </div>
 
             <div className="flex justify-end gap-4 mt-8 pt-4 border-t border-gray-200 dark:border-slate-700">
                 <button
-                    onClick={() => navigate(`/pacientes/edit/${id}`)}
+                    onClick={() => navigate(`/pacientes/editar/${paciente.id}`)}
                     className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition"
                 >
                     Editar Paciente
