@@ -20,6 +20,10 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
         }
     };
 
+    const handleRowClick = (agendamentoId) => {
+        navigate(`/agendamentos/${agendamentoId}`);
+    };
+
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-6">
@@ -42,7 +46,11 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
                         {agendamentos.map((ag) => (
-                            <tr key={ag.id} className="hover:bg-gray-100 dark:hover:bg-slate-700/50">
+                            <tr
+                                key={ag.id}
+                                className="hover:bg-gray-100 dark:hover:bg-slate-700/50 cursor-pointer"
+                                onClick={() => handleRowClick(ag.id)}
+                            >
                                 <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{ag.paciente_nome}</td>
                                 <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{ag.medico_nome}</td>
                                 <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{new Date(ag.data_hora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
@@ -52,10 +60,19 @@ const AgendamentoList = ({ agendamentos = [], onDelete }) => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <button onClick={() => navigate(`/agendamentos/editar/${ag.id}`)} title="Editar" className="text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 mr-4 transition transform hover:scale-110">
+                                    {/* Para evitar que o clique do botão propague para a linha, e.stopPropagation() */}
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/agendamentos/editar/${ag.id}`); }} 
+                                        title="Editar" 
+                                        className="text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 mr-4 transition transform hover:scale-110"
+                                    >
                                         <FaPencilAlt />
                                     </button>
-                                    <button onClick={() => onDelete(ag.id)} title="Excluir" className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition transform hover:scale-110">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onDelete(ag.id); }} 
+                                        title="Excluir" 
+                                        className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition transform hover:scale-110"
+                                    >
                                         <FaTrash />
                                     </button>
                                 </td>

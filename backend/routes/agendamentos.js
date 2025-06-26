@@ -24,7 +24,17 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('SELECT * FROM agendamentos WHERE id = $1', [id]);
+        const query = `
+            SELECT a.id, a.data_hora, a.status, a.tipo_consulta, a.motivo_consulta,
+                   a.observacoes_recepcao, a.status_confirmacao,
+                   p.nome as paciente_nome, p.id as paciente_id,
+                   m.nome as medico_nome, m.id as medico_id
+            FROM agendamentos a
+            JOIN pacientes p ON a.paciente_id = p.id
+            JOIN medicos m ON a.medico_id = m.id
+            WHERE a.id = $1
+        `;
+        const result = await pool.query(query, [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Agendamento não encontrado.' });
         }
@@ -55,7 +65,6 @@ router.post('/', verifyToken, async (req, res) => {
             [paciente_id, medico_id, data_hora, 'Agendado', tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta]
         );
         res.status(201).json(newAgendamento.rows[0]);
-        console.log(`O motivo da consulta é: ${motivo_consulta}`)
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

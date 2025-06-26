@@ -11,6 +11,7 @@ import MedicoForm from './components/Medicos/MedicoForm';
 import MedicoDetails from './components/Medicos/MedicoDetails';
 import AgendamentoController from './components/Agendamentos/AgendamentoController';
 import AgendamentoForm from './components/Agendamentos/AgendamentoForm';
+import AgendamentoDetails from './components/Agendamentos/AgendamentoDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -36,6 +37,8 @@ function App() {
             <Route path="/agendamentos" element={<AgendamentoController />} />
             <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
             <Route path="/agendamentos/editar/:id" element={<AgendamentoForm />} />
+            <Route path="/agendamentos/:id" element={<AgendamentoDetails />} />
+
           
           </Route>
         </Routes>
