@@ -6,7 +6,7 @@ const verifyToken = require('../middleware/authMiddleware');
 router.get('/', verifyToken, async (req, res) => {
     try {
         const query = `
-            SELECT a.id, a.data_hora, a.status, a.tipo_consulta, 
+            SELECT a.id, a.data_hora, a.status, a.tipo_consulta, a.motivo_consulta,
                    p.nome as paciente_nome, p.id as paciente_id,
                    m.nome as medico_nome, m.id as medico_id
             FROM agendamentos a
@@ -36,7 +36,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { paciente_id, medico_id, data, horario, tipo_consulta, observacoes_recepcao, status_confirmacao } = req.body;
+        const { paciente_id, medico_id, data, horario, tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta } = req.body;
         const data_hora = `${data}T${horario}:00`;
         
         const conflictCheck = await pool.query(
@@ -49,12 +49,13 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         const newAgendamento = await pool.query(
-            `INSERT INTO agendamentos (paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            `INSERT INTO agendamentos (paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
              RETURNING *`,
-            [paciente_id, medico_id, data_hora, 'Agendado', tipo_consulta, observacoes_recepcao, status_confirmacao]
+            [paciente_id, medico_id, data_hora, 'Agendado', tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta]
         );
         res.status(201).json(newAgendamento.rows[0]);
+        console.log(`O motivo da consulta é: ${motivo_consulta}`)
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -62,15 +63,15 @@ router.post('/', verifyToken, async (req, res) => {
 
 router.put('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
-    const { paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao } = req.body;
+    const { paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta } = req.body;
 
     try {
         const updatedAgendamento = await pool.query(
             `UPDATE agendamentos 
-             SET paciente_id = $1, medico_id = $2, data_hora = $3, status = $4, tipo_consulta = $5, observacoes_recepcao = $6, status_confirmacao = $7, updated_at = NOW() 
-             WHERE id = $8 
+             SET paciente_id = $1, medico_id = $2, data_hora = $3, status = $4, tipo_consulta = $5, observacoes_recepcao = $6, status_confirmacao = $7, motivo_consulta = $8, updated_at = NOW() 
+             WHERE id = $9 
              RETURNING *`,
-            [paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao, id]
+            [paciente_id, medico_id, data_hora, status, tipo_consulta, observacoes_recepcao, status_confirmacao, motivo_consulta, id]
         );
 
         if (updatedAgendamento.rows.length === 0) {

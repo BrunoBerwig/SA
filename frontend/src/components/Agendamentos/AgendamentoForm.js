@@ -22,6 +22,7 @@ const AgendamentoForm = () => {
         horario: '',
         tipo_consulta: 'Consulta Padrão',
         status_confirmacao: 'Pendente',
+        motivo_consulta: '', 
         observacoes_recepcao: '',
         status: 'Agendado'
     });
@@ -107,8 +108,8 @@ const AgendamentoForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <select name="paciente_id" value={formData.paciente_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                         <option value="">Selecione um paciente</option>
-                         {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                        <option value="">Selecione um paciente</option>
+                        {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                     </select>
                     <select name="medico_id" value={formData.medico_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                         <option value="">Selecione um médico</option>
@@ -142,7 +143,21 @@ const AgendamentoForm = () => {
                     </div>
                 </div>
 
-                 {isEditing && (
+                {/* Novo campo para o Motivo da Consulta */}
+                <div>
+                    <label htmlFor="motivo_consulta" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo da Consulta</label>
+                    <textarea 
+                        name="motivo_consulta" 
+                        id="motivo_consulta" 
+                        value={formData.motivo_consulta} 
+                        onChange={handleChange} 
+                        rows="3" 
+                        placeholder="Ex: Dor de cabeça frequente, check-up anual, retorno para avaliação de exames..." 
+                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    ></textarea>
+                </div>
+                
+                {isEditing && (
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status do Agendamento</label>
                         <select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
