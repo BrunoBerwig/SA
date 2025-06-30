@@ -3,10 +3,35 @@ const router = express.Router();
 const pool = require('../config/database');
 const verifyToken = require('../middleware/authMiddleware');
 
-// GET all pacientes
 router.get('/', verifyToken, async (req, res) => {
+    const { search = '', convenio = '', page = 1, limit = 10 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let whereClauses = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (search) {
+        whereClauses.push(`(nome ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+        params.push(`%${search}%`);
+        paramIndex++;
+    }
+
+    if (convenio) {
+        whereClauses.push(`convenio = $${paramIndex}`);
+        params.push(convenio);
+        paramIndex++;
+    }
+
+    const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
     try {
-        const result = await pool.query(`
+        const countQuery = `SELECT COUNT(*) FROM pacientes ${whereString}`;
+        const countResult = await pool.query(countQuery, params.slice(0, paramIndex - 1));
+        const totalItems = parseInt(countResult.rows[0].count);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const dataQuery = `
             SELECT
                 id,
                 nome,
@@ -20,52 +45,45 @@ router.get('/', verifyToken, async (req, res) => {
                 contato_emergencia_numero,
                 created_at
             FROM pacientes
+            ${whereString}
             ORDER BY nome ASC
-        `);
-        res.json(result.rows);
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+        const dataParams = [...params.slice(0, paramIndex - 1), limit, offset];
+        
+        const dataResult = await pool.query(dataQuery, dataParams);
+
+        res.json({
+            data: dataResult.rows,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: parseInt(page),
+                itemsPerPage: parseInt(limit)
+            }
+        });
     } catch (err) {
-        console.error('Erro ao buscar todos os pacientes:', err.message);
-        res.status(500).json({ error: err.message });
+        console.error('Erro ao buscar pacientes:', err.message);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 
-// GET paciente by ID
 router.get('/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query(`
-            SELECT
-                id,
-                nome,
-                email,
-                telefone,
-                convenio,
-                data_nascimento,
-                alergias,
-                condicoes_medicas,
-                contato_emergencia_nome,
-                contato_emergencia_numero,
-                created_at
-            FROM pacientes
-            WHERE id = $1
-        `, [id]);
+        const result = await pool.query('SELECT * FROM pacientes WHERE id = $1', [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Paciente não encontrado.' });
         }
         res.json(result.rows[0]);
     } catch (err) {
         console.error('Erro ao buscar paciente por ID:', err.message);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 
-// POST a new paciente
 router.post('/', verifyToken, async (req, res) => {
     const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero } = req.body;
-
-    // Log para depuração
-    console.log('Dados recebidos para POST de paciente:', req.body);
-
     try {
         const newPaciente = await pool.query(
             'INSERT INTO pacientes (nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
@@ -74,18 +92,13 @@ router.post('/', verifyToken, async (req, res) => {
         res.status(201).json(newPaciente.rows[0]);
     } catch (err) {
         console.error('Erro ao criar novo paciente:', err.message);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 
-// PUT (update) a paciente
 router.put('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero } = req.body;
-
-    // Log para depuração
-    console.log(`Dados recebidos para PUT do paciente ${id}:`, req.body);
-
     try {
         const updatedPaciente = await pool.query(
             'UPDATE pacientes SET nome = $1, email = $2, telefone = $3, convenio = $4, data_nascimento = $5, alergias = $6, condicoes_medicas = $7, contato_emergencia_nome = $8, contato_emergencia_numero = $9 WHERE id = $10 RETURNING *',
@@ -97,22 +110,21 @@ router.put('/:id', verifyToken, async (req, res) => {
         res.json(updatedPaciente.rows[0]);
     } catch (err) {
         console.error(`Erro ao atualizar paciente ${id}:`, err.message);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 
-// DELETE a paciente
 router.delete('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
     try {
-        const { id } = req.params;
         const deleteResult = await pool.query('DELETE FROM pacientes WHERE id = $1 RETURNING id', [id]);
-        if (deleteResult.rows.length === 0) {
+        if (deleteResult.rowCount === 0) {
             return res.status(404).json({ message: 'Paciente não encontrado para exclusão.' });
         }
-        res.status(204).send(); // No content
+        res.status(204).send();
     } catch (err) {
-        console.error(`Erro ao deletar paciente ${req.params.id}:`, err.message);
-        res.status(500).json({ error: err.message });
+        console.error(`Erro ao deletar paciente ${id}:`, err.message);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 

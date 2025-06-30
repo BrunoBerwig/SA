@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 import { FaUserInjured, FaUserMd, FaCalendarCheck, FaPlus } from 'react-icons/fa';
 import Spinner from './common/Spinner';
 
-const StatCard = ({ icon, title, value, color }) => {
-    return (
-        <div className={`bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center border-l-4 ${color}`}>
+const StatCard = ({ icon, title, value, color, to }) => {
+    const cardContent = (
+        <div className={`bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center border-l-4 ${color} transition transform hover:-translate-y-1`}>
             <div className="mr-4 text-3xl">{icon}</div>
             <div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">{title}</p>
@@ -14,6 +15,7 @@ const StatCard = ({ icon, title, value, color }) => {
             </div>
         </div>
     );
+    return to ? <Link to={to}>{cardContent}</Link> : <div>{cardContent}</div>;
 };
 
 const DashboardHome = () => {
@@ -28,26 +30,27 @@ const DashboardHome = () => {
                 const [resPacientes, resMedicos, resAgendamentos] = await Promise.all([
                     api.get('/pacientes'),
                     api.get('/medicos'),
-                    api.get('/agendamentos')
+                    api.get('/agendamentos?limit=5')
                 ]);
 
                 setStats({
-                    pacientes: resPacientes.data.length,
-                    medicos: resMedicos.data.length,
-                    agendamentos: resAgendamentos.data.length,
+                    pacientes: resPacientes.data.pagination.totalItems,
+                    medicos: resMedicos.data.pagination.totalItems,
+                    agendamentos: resAgendamentos.data.pagination.totalItems,
                 });
 
                 const hoje = new Date();
                 hoje.setHours(0, 0, 0, 0);
 
-                const agendamentosFuturos = resAgendamentos.data
+                const agendamentosFuturos = resAgendamentos.data.data
                     .filter(ag => new Date(ag.data_hora) >= hoje)
                     .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
 
-                setProximosAgendamentos(agendamentosFuturos.slice(0, 5));
+                setProximosAgendamentos(agendamentosFuturos);
 
             } catch (error) {
                 console.error("Erro ao carregar dados do dashboard:", error);
+                toast.error("Falha ao carregar dados do dashboard.");
             } finally {
                 setLoading(false);
             }
@@ -74,16 +77,16 @@ const DashboardHome = () => {
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Aqui está um resumo da atividade da sua clínica.</p>
                 </div>
                 <div className="flex gap-2">
-                     <Link to="/agendamentos/novo" className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                     <Link to="/agendamentos/novo" className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition">
                         <FaPlus className="mr-2" /> Novo Agendamento
                     </Link>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard icon={<FaUserInjured className="text-blue-500"/>} title="Total de Pacientes" value={stats.pacientes} color="border-blue-500" />
-                <StatCard icon={<FaUserMd className="text-green-500"/>} title="Total de Médicos" value={stats.medicos} color="border-green-500" />
-                <StatCard icon={<FaCalendarCheck className="text-purple-500"/>} title="Agendamentos Futuros" value={proximosAgendamentos.length} color="border-purple-500" />
+                <StatCard to="/pacientes" icon={<FaUserInjured className="text-blue-500"/>} title="Total de Pacientes" value={stats.pacientes} color="border-blue-500" />
+                <StatCard to="/medicos" icon={<FaUserMd className="text-green-500"/>} title="Total de Médicos" value={stats.medicos} color="border-green-500" />
+                <StatCard to="/agendamentos" icon={<FaCalendarCheck className="text-purple-500"/>} title="Total de Agendamentos" value={stats.agendamentos} color="border-purple-500" />
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">

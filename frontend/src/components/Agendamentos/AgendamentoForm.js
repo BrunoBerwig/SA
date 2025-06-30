@@ -22,8 +22,8 @@ const AgendamentoForm = () => {
         horario: '',
         tipo_consulta: 'Consulta Padrão',
         status_confirmacao: 'Pendente',
-        motivo_consulta: '', 
         observacoes_recepcao: '',
+        motivo_consulta: '',
         status: 'Agendado'
     });
 
@@ -39,8 +39,8 @@ const AgendamentoForm = () => {
                     api.get('/pacientes'),
                     api.get('/medicos?ativo=true')
                 ]);
-                setPacientes(resPacientes.data);
-                setMedicos(resMedicos.data);
+                setPacientes(resPacientes.data.data || resPacientes.data);
+                setMedicos(resMedicos.data.data || resMedicos.data);
 
                 if (isEditing) {
                     const resAgendamento = await api.get(`/agendamentos/${id}`);
@@ -75,10 +75,12 @@ const AgendamentoForm = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        const submissionData = {
-            ...formData,
-            data_hora: `${formData.data}T${formData.horario}:00`
-        };
+        const submissionData = { ...formData };
+        if (!isEditing) {
+            submissionData.data_hora = `${formData.data}T${formData.horario}:00`;
+        } else {
+             submissionData.data_hora = `${formData.data}T${formData.horario.substring(0,5)}:00`;
+        }
 
         const promise = isEditing 
             ? api.put(`/agendamentos/${id}`, submissionData) 
@@ -90,9 +92,7 @@ const AgendamentoForm = () => {
                 navigate('/agendamentos');
                 return `Agendamento ${isEditing ? 'atualizado' : 'criado'} com sucesso!`;
             },
-            error: (err) => {
-                return err.response?.data?.message || 'Ocorreu um erro ao salvar.';
-            }
+            error: (err) => err.response?.data?.message || 'Ocorreu um erro ao salvar.'
         });
         
         promise.catch(() => {}).finally(() => setIsLoading(false));
@@ -108,8 +108,8 @@ const AgendamentoForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <select name="paciente_id" value={formData.paciente_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                        <option value="">Selecione um paciente</option>
-                        {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                         <option value="">Selecione um paciente</option>
+                         {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                     </select>
                     <select name="medico_id" value={formData.medico_id} onChange={handleChange} required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                         <option value="">Selecione um médico</option>
@@ -143,21 +143,7 @@ const AgendamentoForm = () => {
                     </div>
                 </div>
 
-                {/* Novo campo para o Motivo da Consulta */}
-                <div>
-                    <label htmlFor="motivo_consulta" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo da Consulta</label>
-                    <textarea 
-                        name="motivo_consulta" 
-                        id="motivo_consulta" 
-                        value={formData.motivo_consulta} 
-                        onChange={handleChange} 
-                        rows="3" 
-                        placeholder="Ex: Dor de cabeça frequente, check-up anual, retorno para avaliação de exames..." 
-                        className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    ></textarea>
-                </div>
-                
-                {isEditing && (
+                 {isEditing && (
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status do Agendamento</label>
                         <select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
@@ -170,8 +156,13 @@ const AgendamentoForm = () => {
                 )}
 
                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo da Consulta (Breve)</label>
+                    <input name="motivo_consulta" value={formData.motivo_consulta || ''} onChange={handleChange} placeholder="Ex: Dor de cabeça, check-up anual..." className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"/>
+                </div>
+
+                <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações (Recepção)</label>
-                    <textarea name="observacoes_recepcao" value={formData.observacoes_recepcao} onChange={handleChange} rows="3" placeholder="Ex: Paciente tem preferência pelo horário da manhã, trazer exames anteriores..." className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+                    <textarea name="observacoes_recepcao" value={formData.observacoes_recepcao || ''} onChange={handleChange} rows="3" placeholder="Ex: Paciente tem preferência pelo horário da manhã..." className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
                 </div>
                 
                 <button type="submit" disabled={isLoading} className="w-full h-11 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:bg-blue-800">
