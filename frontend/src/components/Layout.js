@@ -1,16 +1,18 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import Breadcrumbs from './common/Breadcrumbs';
 
-export default function Layout() {
+const Layout = () => {
     return (
-        <div className="flex min-h-screen bg-gray-100 dark:bg-slate-900">
-            <div className="fixed top-0 left-0 h-full">
-                <Sidebar />
-            </div>
-            <main className="flex-1 p-8 ml-64">
+        <div className="flex bg-gray-100 dark:bg-slate-900 min-h-screen">
+            <Sidebar />
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <Breadcrumbs />
                 <Outlet />
             </main>
         </div>
     );
-}
+};
+
+export default Layout;

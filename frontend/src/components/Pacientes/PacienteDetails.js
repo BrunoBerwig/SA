@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
-import { FaUserInjured, FaEnvelope, FaPhone, FaCalendarAlt, FaAllergies, FaNotesMedical, FaUserShield, FaBirthdayCake } from 'react-icons/fa';
+import { FaUserInjured, FaEnvelope, FaPhone, FaCalendarAlt, FaAllergies, FaNotesMedical, FaUserShield, FaBirthdayCake, FaCopy } from 'react-icons/fa';
 
 const PacienteDetails = () => {
     const { id } = useParams();
@@ -43,6 +43,11 @@ const PacienteDetails = () => {
         }
         return idade;
     };
+    
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text);
+        toast.success('Copiado!');
+    };
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Spinner size="lg" /></div>;
@@ -58,14 +63,22 @@ const PacienteDetails = () => {
                     <img src={paciente.foto_url || `https://ui-avatars.com/api/?name=${paciente.nome.replace(/\s/g, '+')}&background=random&size=128`} alt={`Foto de ${paciente.nome}`} className="w-32 h-32 rounded-full object-cover border-4 border-blue-500" />
                     <div className="text-center md:text-left flex-1">
                         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100">{paciente.nome}</h1>
-                        <p className="text-lg text-gray-600 dark:text-gray-400 mt-1"><FaBirthdayCake className="inline mr-2" />{calcularIdade(paciente.data_nascimento)} anos</p>
-                        <p className="text-lg text-gray-600 dark:text-gray-400"><FaEnvelope className="inline mr-2" />{paciente.email}</p>
-                        <p className="text-lg text-gray-600 dark:text-gray-400"><FaPhone className="inline mr-2" />{paciente.telefone}</p>
+                        <p className="text-lg text-gray-600 dark:text-gray-400 mt-2"><FaBirthdayCake className="inline mr-2" />{calcularIdade(paciente.data_nascimento)} anos</p>
+                        <div className="flex items-center justify-center md:justify-start gap-2 mt-1 text-gray-600 dark:text-gray-400">
+                            <FaEnvelope />
+                            <a href={`mailto:${paciente.email}`} className="hover:underline">{paciente.email}</a>
+                            <button onClick={() => handleCopy(paciente.email)} title="Copiar email" className="text-gray-400 hover:text-blue-500 transition"><FaCopy /></button>
+                        </div>
+                        <div className="flex items-center justify-center md:justify-start gap-2 mt-1 text-gray-600 dark:text-gray-400">
+                            <FaPhone />
+                            <a href={`tel:${paciente.telefone}`} className="hover:underline">{paciente.telefone}</a>
+                            <button onClick={() => handleCopy(paciente.telefone)} title="Copiar telefone" className="text-gray-400 hover:text-blue-500 transition"><FaCopy /></button>
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-4 border-t border-gray-200 dark:border-slate-700 pt-6">
-                     <button onClick={() => navigate('/pacientes')} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">Voltar</button>
-                    <button onClick={() => navigate(`/pacientes/editar/${paciente.id}`)} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition">Editar Paciente</button>
+                    <button onClick={() => navigate('/pacientes')} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500 transform active:scale-95">Voltar</button>
+                    <button onClick={() => navigate(`/pacientes/editar/${paciente.id}`)} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition transform active:scale-95">Editar Paciente</button>
                 </div>
             </div>
 

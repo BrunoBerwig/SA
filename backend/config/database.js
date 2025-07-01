@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 
 
 if (typeof process.env.DB_PASSWORD !== 'string') {
-    console.error('ERRO');
+    console.error('ERROR');
     process.exit(1); 
 }
 

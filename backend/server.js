@@ -13,12 +13,14 @@ const pacientesRoutes = require('./routes/pacientes');
 const medicosRoutes = require('./routes/medicos');
 const agendamentosRoutes = require('./routes/agendamentos');
 const especialidadesRoutes = require('./routes/especialidades');
+const conveniosRoutes = require('./routes/convenios');
 
 app.use('/api', authRoutes);
 app.use('/api/pacientes', pacientesRoutes);
 app.use('/api/medicos', medicosRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/especialidades', especialidadesRoutes);
+app.use('/api/convenios', conveniosRoutes);
 
 app.get('/', (req, res) => {
     res.send('API da Clínica funcionando!');

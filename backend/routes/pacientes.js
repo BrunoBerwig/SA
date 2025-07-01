@@ -4,31 +4,35 @@ const pool = require('../config/database');
 const verifyToken = require('../middleware/authMiddleware');
 
 router.get('/', verifyToken, async (req, res) => {
-    const { search = '', convenio = '', page = 1, limit = 10 } = req.query;
+    const { search = '', convenio_id = '', page = 1, limit = 10 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     let whereClauses = [];
     const params = [];
     let paramIndex = 1;
     if (search) {
-        whereClauses.push(`(nome ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+        whereClauses.push(`(p.nome ILIKE $${paramIndex} OR p.email ILIKE $${paramIndex})`);
         params.push(`%${search}%`);
         paramIndex++;
     }
-    if (convenio) {
-        whereClauses.push(`convenio = $${paramIndex}`);
-        params.push(convenio);
+    if (convenio_id) {
+        whereClauses.push(`p.convenio_id = $${paramIndex}`);
+        params.push(parseInt(convenio_id));
         paramIndex++;
     }
     const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
     try {
-        const countQuery = `SELECT COUNT(*) FROM pacientes ${whereString}`;
+        const countQuery = `SELECT COUNT(p.id) FROM pacientes p ${whereString}`;
         const countResult = await pool.query(countQuery, params.slice(0, paramIndex - 1));
         const totalItems = parseInt(countResult.rows[0].count);
         const totalPages = Math.ceil(totalItems / limit);
         const dataQuery = `
-            SELECT id, nome, email, telefone, convenio, foto_url
-            FROM pacientes ${whereString} ORDER BY nome ASC
-            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+            SELECT p.id, p.nome, p.email, p.telefone, c.nome as convenio, p.foto_url
+            FROM pacientes p
+            LEFT JOIN convenios c ON p.convenio_id = c.id
+            ${whereString}
+            ORDER BY p.nome ASC
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
         const dataParams = [...params.slice(0, paramIndex - 1), limit, offset];
         const dataResult = await pool.query(dataQuery, dataParams);
         res.json({
@@ -36,6 +40,7 @@ router.get('/', verifyToken, async (req, res) => {
             pagination: { totalItems, totalPages, currentPage: parseInt(page), itemsPerPage: parseInt(limit) }
         });
     } catch (err) {
+        console.error('Erro ao buscar pacientes:', err.message);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
@@ -49,6 +54,7 @@ router.get('/:id', verifyToken, async (req, res) => {
         }
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao buscar paciente por ID:', err.message);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
@@ -72,11 +78,11 @@ router.get('/:id/agendamentos', verifyToken, async (req, res) => {
 });
 
 router.post('/', verifyToken, async (req, res) => {
-    const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url } = req.body;
+    const { nome, email, telefone, convenio_id, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url } = req.body;
     try {
         const newPaciente = await pool.query(
-            'INSERT INTO pacientes (nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-            [nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url]
+            'INSERT INTO pacientes (nome, email, telefone, convenio_id, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+            [nome, email, telefone, convenio_id || null, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url]
         );
         res.status(201).json(newPaciente.rows[0]);
     } catch (err) {
@@ -86,11 +92,11 @@ router.post('/', verifyToken, async (req, res) => {
 
 router.put('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
-    const { nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url } = req.body;
+    const { nome, email, telefone, convenio_id, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url } = req.body;
     try {
         const updatedPaciente = await pool.query(
-            'UPDATE pacientes SET nome = $1, email = $2, telefone = $3, convenio = $4, data_nascimento = $5, alergias = $6, condicoes_medicas = $7, contato_emergencia_nome = $8, contato_emergencia_numero = $9, foto_url = $10 WHERE id = $11 RETURNING *',
-            [nome, email, telefone, convenio, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url, id]
+            'UPDATE pacientes SET nome = $1, email = $2, telefone = $3, convenio_id = $4, data_nascimento = $5, alergias = $6, condicoes_medicas = $7, contato_emergencia_nome = $8, contato_emergencia_numero = $9, foto_url = $10, updated_at = NOW() WHERE id = $11 RETURNING *',
+            [nome, email, telefone, convenio_id || null, data_nascimento, alergias, condicoes_medicas, contato_emergencia_nome, contato_emergencia_numero, foto_url, id]
         );
         if (updatedPaciente.rows.length === 0) {
             return res.status(404).json({ message: 'Paciente não encontrado para atualização.' });
