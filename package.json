@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix frontend\"",
+    "install all": "concurrently \"npm install --prefix backend\" \"npm install --prefix frontend\""
+  },
   "dependencies": {
     "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   }
 }
