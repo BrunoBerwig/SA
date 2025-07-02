@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 20225;
 
+const iniciarAgendadorDeEmails = require('./emailScheduler');
+
 app.use(cors());
 app.use(express.json());
 
@@ -28,4 +30,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Servidor backend rodando na porta ${PORT}`);
+    iniciarAgendadorDeEmails();
 });
