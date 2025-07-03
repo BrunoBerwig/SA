@@ -20,25 +20,24 @@ function App() {
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<><title>Login</title><Login /></>} />
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/dashboard" element={<><title>Dashboard</title><DashboardHome /></>} />
             
-            <Route path="/pacientes" element={<PacienteController />} />
-            <Route path="/pacientes/novo" element={<PacienteForm />} />
-            <Route path="/pacientes/editar/:id" element={<PacienteForm />} />
-            <Route path="/pacientes/:id" element={<PacienteDetails />} />
+            <Route path="/pacientes" element={<><title>Pacientes</title><PacienteController /></>} />
+            <Route path="/pacientes/novo" element={<><title>Novo Paciente</title><PacienteForm /></>} />
+            <Route path="/pacientes/editar/:id" element={<><title>Editar Paciente</title><PacienteForm /></>} />
+            <Route path="/pacientes/:id" element={<><title>Detalhes do Paciente</title><PacienteDetails /></>} />
             
-            <Route path="/medicos" element={<MedicoController />} />
-            <Route path="/medicos/novo" element={<MedicoForm />} />
-            <Route path="/medicos/editar/:id" element={<MedicoForm />} />
-            <Route path="/medicos/:id" element={<MedicoDetails />} />
+            <Route path="/medicos" element={<><title>Médicos</title><MedicoController /></>} />
+            <Route path="/medicos/novo" element={<><title>Novo Médico</title><MedicoForm /></>} />
+            <Route path="/medicos/editar/:id" element={<><title>Editar Médico</title><MedicoForm /></>} />
+            <Route path="/medicos/:id" element={<><title>Detalhes do Médico</title><MedicoDetails /></>} />
 
-            <Route path="/agendamentos" element={<AgendamentoController />} />
-            <Route path="/agendamentos/novo" element={<AgendamentoForm />} />
-            <Route path="/agendamentos/editar/:id" element={<AgendamentoForm />} />
-            <Route path="/agendamentos/:id" element={<AgendamentoDetails />} />
-
+            <Route path="/agendamentos" element={<><title>Agendamentos</title><AgendamentoController /></>} />
+            <Route path="/agendamentos/novo" element={<><title>Novo Agendamento</title><AgendamentoForm /></>} />
+            <Route path="/agendamentos/editar/:id" element={<><title>Editar Agendamento</title><AgendamentoForm /></>} />
+            <Route path="/agendamentos/:id" element={<><title>Detalhes do Agendamento</title><AgendamentoDetails /></>} />
           
           </Route>
         </Routes>
